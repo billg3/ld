@@ -1,0 +1,22 @@
+body {
+    font-family: monospace
+}
+
+#source-text, #user-input {
+    width: 40vw;
+    height: 30vh;
+    margin: 1vw;
+    border-radius: 2px;
+    position: relative
+}
+
+#submit {
+    display: inline-block;
+    padding: 1px 4px;
+    height: 15px;
+    border: 1px solid black;
+    position: absolute;
+    left: 2vw;
+    top: 30vh;
+    background: white
+}
