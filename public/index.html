@@ -5,7 +5,19 @@
     <textarea id='source-text' placeholder='enter text'></textarea>
     <div id='submit'>submit</div>
     <textarea id='user-input' placeholder='start typing'></textarea>
-    <div id='suggestion'></div>
+    <div id='suggestion-container-container'>
+        <div id='suggestion-container'>
+            <span>&rarr;</span>
+            <span id='suggestion'></span>
+        </div>
+    </div>
+    <div class='instructions'>
+        <span class='bold'>instructions</span>
+        <span>paste source text into the text box on the left. </span>
+        <span>the more text you enter the more intelligent the suggestions will be, but the longer it will take. 70,000 words takes about 15 seconds.</span>
+        <span>when text has been processed the submit button will turn green and a text box will appear on the right of the screen.</span>
+        <span>depending on what you type/ what source text you entered you may have to type several words before a suggestion shows up. when a suggestion appears below the box press the right arrow key to select it.</span>
+    </div>
     <script
         src="https://code.jquery.com/jquery-3.3.1.js"
         integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="

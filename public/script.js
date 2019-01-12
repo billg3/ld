@@ -36,6 +36,11 @@ const storeTwo = function(){
         } 
     })
     document.getElementById('user-input').value = ''
+    $('#submit')
+        .text('done')
+        .css({'background-color':'green','color':'white','padding':'2px 4px','border':'0px'})
+    $('#user-input').toggle()
+    $('#suggestion-container').toggle()
     console.log(library)
 }
 
@@ -68,7 +73,7 @@ const suggestTwo = e => {
     // if(e.keyCode !== 39){ return }
     // if(e.keyCode !== 39 || e.keyCode !== 32){ return }
     const words = getWords(userInput)
-    if(words.length <= 2){ return }
+    if(words.length <= 1){ return }
     const two = `${words[words.length - 2]} ${words[words.length - 1]}`
     if(library[two] == undefined){ return }
     const r = [0,'']
@@ -81,7 +86,7 @@ const suggestTwo = e => {
     if(e.keyCode !== 39){return}
     document.getElementById('user-input').value += ` ${r[1]} `
     $('#suggestion').text('')
-    //suggestTwo({keyCode:0})
+    suggestTwo()
     console.log(r[1])
 }
 
