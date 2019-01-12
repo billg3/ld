@@ -37,10 +37,10 @@ const storeTwo = function(){
     })
     document.getElementById('user-input').value = ''
     $('#submit')
-        .text('done')
+        .text('ready')
         .css({'background-color':'green','color':'white','padding':'2px 4px','border':'0px'})
-    $('#user-input').toggle()
-    $('#suggestion-container').toggle()
+    $('#user-input').css('display','inline-block')
+    $('#suggestion-container').css('display','block')
     console.log(library)
 }
 
@@ -69,6 +69,7 @@ const suggest = e => {
 }
 
 const suggestTwo = e => {
+    $('#submit').text('submit').css({'background-color':'white','color':'black','border':'1px solid black'})
     console.log(e)
     // if(e.keyCode !== 39){ return }
     // if(e.keyCode !== 39 || e.keyCode !== 32){ return }
@@ -91,5 +92,7 @@ const suggestTwo = e => {
 }
 
 $('#user-input').keyup(e=>suggestTwo(e))
+
+
 
 })
