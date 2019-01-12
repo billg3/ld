@@ -18,5 +18,6 @@ body {
     position: absolute;
     left: 2vw;
     top: 30vh;
-    background: white
+    background: white;
+    cursor: pointer
 }
