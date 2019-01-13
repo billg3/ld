@@ -5,6 +5,8 @@ const threeLibrary = {}
 const source = '#source-text'
 const userInput = '#user-input'
 
+window.callApi = () => $.post('http://localhost:3000/api',('asdf'),data => console.log(data))
+
 const getWords = function(s, removeSentences = true){
     const space = new RegExp(/\n/g)
     const regexp = removeSentences ? new RegExp(/\,|\.|\:|\(|\)|\;|\'|\"|\↵/g) : new RegExp(/\,|\:|\(|\)|\;|\'|\"|\!|\?/g)
