@@ -9,8 +9,10 @@ window.callApi = () => $.post('http://localhost:3000/api',('asdf'),data => conso
 
 const getWords = function(s, removeSentences = true){
     const space = new RegExp(/\n/g)
-    const regexp = removeSentences ? new RegExp(/\,|\.|\:|\(|\)|\;|\'|\"|\↵/g) : new RegExp(/\,|\:|\(|\)|\;|\'|\"|\!|\?/g)
-    return $(s).val().toLowerCase().replace(space,' ').replace(regexp,'').split(' ').filter(e=>e!='')
+    const p = new RegExp(/\./g)
+    const text = $(s).val().toLowerCase().replace(p,' .')
+    const regexp = removeSentences ? new RegExp(/\,|\:|\(|\)|\;|\'|\"|\↵/g) : new RegExp(/\,|\:|\(|\)|\;|\'|\"|\!|\?/g)
+    return text.replace(space,' ').replace(regexp,'').split(' ').filter(e=>e!='')
 }
 
 
@@ -74,6 +76,14 @@ const storeThree = function(){
 }
 
 $('#submit').click(function(){storeTwo()})
+$('#source-text').keyup(function(e){
+    console.log(e.keyCode)
+    if(e.keyCode == 13){
+        storeTwo()
+        $('#user-input').focus()
+    }
+})
+
 
 async function suggest(e) {
     // if(e.keyCode !== 32){return}
@@ -127,12 +137,21 @@ async function sentenceAnalysis(choices){
     // return next word and period if is end of sentence 
 }
 
-const suggestTwo = e => {
+let selection = ''
+
+const suggestTwo = (e) => {
+    if(e == undefined){ e = {}; e.keyCode = 0}
+    if(e.keyCode == 39 ){
+        
+        document.getElementById('user-input').value += selection == '.' ? `${selection} ` : ` ${selection}`
+        selection = ''
+        suggestTwo()
+    }
 
     $('#submit').text('submit').css({'background-color':'white','color':'black','border':'1px solid black'})
     console.log(e.keyCode, e.keyCode == 32)
     // if(e.keyCode !== 39){ return }
-    if(e.keyCode !== 39 && e.keyCode !== 32){ return }
+    // if(e.keyCode !== 39 && e.keyCode !== 32){ return }
     let choices = []
     const words = getWords(userInput)
     // if(words.length <= 1){ return }
@@ -157,7 +176,7 @@ const suggestTwo = e => {
         suggestThree().then(t => {
             // console.log(t)
             //console.log(choices)
-            const nchoices = choices.concat(d) // .concat(d)
+            const nchoices = choices.concat(d) //.concat(t)
 
             //
 
@@ -171,13 +190,24 @@ const suggestTwo = e => {
                     clist[e] = 0 :
                     clist[e] ++
             })
-            const choice = nchoices[Math.floor(Math.random() * nchoices.length)]
+            const index = Math.floor(Math.random() * nchoices.length)
             // console.log(choice)
+            let choice = nchoices[index]
+            //choice = choice == ' .' ? '.' : choice
+            selection = choice
+            console.log(words[words.length - 1] == '.')
+            if(words[words.length - 1] == '.'){
+                console.log('uppercase ran')
+                selection = selection.split('')
+                selection[0] = selection[0].toUpperCase()
+                selection = selection.join('')
+            } 
+            console.log(choice, selection)
             $('#suggestion').text(choice)
             if(key !== 39){ return }
-            document.getElementById('user-input').value += ` ${choice} `
-            $('#suggestion').text('')
-            suggestTwo()
+            // document.getElementById('user-input').value += ` ${choice} `
+            // $('#suggestion').text('')
+            // suggestTwo(null,choice)
         })
     })
     // console.log(one)
