@@ -140,84 +140,52 @@ async function sentenceAnalysis(choices){
 let selection = ''
 
 const suggestTwo = (e) => {
-    if(e == undefined){ e = {}; e.keyCode = 0}
-    if(e.keyCode == 39 ){
-        
+
+    // if users presses arrow set word to previously generated word
+    if(e.keyCode == 39 ){        
         document.getElementById('user-input').value += selection == '.' ? `${selection} ` : ` ${selection}`
         selection = ''
-        suggestTwo()
+        // generate next suggestion
+        e.keyCode = 0
+        suggestTwo(e)
     }
 
     $('#submit').text('submit').css({'background-color':'white','color':'black','border':'1px solid black'})
-    console.log(e.keyCode, e.keyCode == 32)
-    // if(e.keyCode !== 39){ return }
-    // if(e.keyCode !== 39 && e.keyCode !== 32){ return }
+
     let choices = []
     const words = getWords(userInput)
-    // if(words.length <= 1){ return }
+
+    // get last two words from user input
     const two = `${words[words.length - 2]} ${words[words.length - 1]}`
+
+    // if the most recently entered word does not exist do not try and create a reccomendation
     if(library[words[words.length - 1]] == undefined){ return }
+
     const suggestions = library[two]
     for(let word in suggestions){
         for(let i = 0; i<suggestions[word]; i++){
             choices.push(word, word)
         }
     }
-    // $('#suggestion').text(r[1])
-    // console.log($('#suggestion'))
-    // if(e.keyCode !== 39){return}
-
 
     const key = e.keyCode
     suggest().then(d => {
-        // console.log(choices)
-        // console.log(d)
-        // choices = choices.concat(d)
-        suggestThree().then(t => {
-            // console.log(t)
-            //console.log(choices)
-            const nchoices = choices.concat(d) //.concat(t)
+        choices = choices.concat(d)
 
-            //
+        const index = Math.floor(Math.random() * choices.length)
+        const choice = choices[index]
+        selection = choice
 
-            // sentenceAnalysis()
+        if(words[words.length - 1] == '.'){
+            selection = selection.split('')
+            selection[0] = selection[0].toUpperCase()
+            selection = selection.join('')
+        }
 
-            // 
-            // console.log(nchoices, 'nchoices')
-            const clist = {}
-            nchoices.forEach(e=>{
-                clist[e] == undefined ?
-                    clist[e] = 0 :
-                    clist[e] ++
-            })
-            const index = Math.floor(Math.random() * nchoices.length)
-            // console.log(choice)
-            let choice = nchoices[index]
-            //choice = choice == ' .' ? '.' : choice
-            selection = choice
-            console.log(words[words.length - 1] == '.')
-            if(words[words.length - 1] == '.'){
-                console.log('uppercase ran')
-                selection = selection.split('')
-                selection[0] = selection[0].toUpperCase()
-                selection = selection.join('')
-            } 
-            console.log(choice, selection)
-            $('#suggestion').text(choice)
-            if(key !== 39){ return }
-            // document.getElementById('user-input').value += ` ${choice} `
-            // $('#suggestion').text('')
-            // suggestTwo(null,choice)
-        })
+        $('#suggestion').text(choice)
+        if(key !== 39){ return }
     })
-    // console.log(one)
-    // console.log(choices)
-    // choices.concat(one)
-    // console.log(choices)
-    // document.getElementById('user-input').value += ` ${r[1]} `
-    // $('#suggestion').text('')
-    // suggestTwo()
-    // console.log(r[1])
+
 }
 
 $('#user-input').keyup(e=>suggestTwo(e))
