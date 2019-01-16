@@ -105,25 +105,25 @@ async function suggest(e) {
 
 
 async function sentenceAnalysis(choices){
-    const url = 'https://language.googleapis.com/v1beta2/documents:analyzeSyntax '
-    // analyze content of sentence
+    let calls = 0
 
     // get sentence
-
     const sentences = getWords(userInput,false).join(' ').split('.')
     const sentence = sentences[sentences.length - 1]
-    const newSentence = sentence.length ? false : true
+
+    console.log(sentence, sentence.length ? 'sentence' : 'new sentence')
+
+    
+    // https://developer.oxforddictionaries.com/documentation
+    const url = 'https://od-api.oxforddictionaries.com/api/v1'
+    // analyze content of sentence
 
     const req = {
         // document: {object('this is a sample sentence')},
 
     }
 
-    $.post(url,{})
-
-    console.log(sentence, sentences)
-
-        // determine if begining of sentence
+    // determine if begining of sentence
 
     // send sentence to API
 
@@ -171,19 +171,20 @@ const suggestTwo = (e) => {
     const key = e.keyCode
     suggest().then(d => {
         choices = choices.concat(d)
+        sentenceAnalysis().then(sentenceData => {
+            const index = Math.floor(Math.random() * choices.length)
+            const choice = choices[index]
+            selection = choice
 
-        const index = Math.floor(Math.random() * choices.length)
-        const choice = choices[index]
-        selection = choice
+            if(words[words.length - 1] == '.'){
+                selection = selection.split('')
+                selection[0] = selection[0].toUpperCase()
+                selection = selection.join('')
+            }
 
-        if(words[words.length - 1] == '.'){
-            selection = selection.split('')
-            selection[0] = selection[0].toUpperCase()
-            selection = selection.join('')
-        }
-
-        $('#suggestion').text(choice)
-        if(key !== 39){ return }
+            $('#suggestion').text(choice)
+            if(key !== 39){ return }
+        })
     })
 
 }

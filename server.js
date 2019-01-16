@@ -14,7 +14,8 @@ app.use(bodyParser.json())
 
 const api = require('./controllers/api')
 const html = require('./controllers/html')
-api(app)
+const Word = require('./models/words')
+api(app, Word)
 html(app)
 
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`))
