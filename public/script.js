@@ -5,8 +5,6 @@ const threeLibrary = {}
 const source = '#source-text'
 const userInput = '#user-input'
 
-window.callApi = () => $.post('http://localhost:3000/api',('asdf'),data => console.log(data))
-
 const getWords = function(s, removeSentences = true){
     const space = new RegExp(/\n/g)
     const p = new RegExp(/\./g)
@@ -36,48 +34,47 @@ const storeTwo = function(){
         } 
     })
     store()
-    storeThree()
+    // storeThree()
     document.getElementById('user-input').value = ''
     $('#submit').text('ready').css({'background-color':'green','color':'white','padding':'2px 4px','border':'0px'})
     $('#user-input').css('display','inline-block')
     $('#suggestion-container').css('display','block')
 }
 
-const storeThree = function(){
-    const words = getWords(source)
-    words.forEach((e,i)=>{
-        if(i<words.length-3){
-            if(threeLibrary[e] == undefined) threeLibrary[e] = {}
-            if(threeLibrary[e][words[i+2]] == undefined) threeLibrary[e][words[i+2]] = 0
-            threeLibrary[e][words[i+2]] ++
-        }
-    })
-    console.log(threeLibrary)
-}
+// const storeThree = function(){
+//     const words = getWords(source)
+//     words.forEach((e,i)=>{
+//         if(i<words.length-3){
+//             if(threeLibrary[e] == undefined) threeLibrary[e] = {}
+//             if(threeLibrary[e][words[i+2]] == undefined) threeLibrary[e][words[i+2]] = 0
+//             threeLibrary[e][words[i+2]] ++
+//         }
+//     })
+//     console.log(threeLibrary)
+// }
 
- async function suggestThree(){
-    const words = getWords(userInput)
-    const choices = []
-    if(words.length < 2){return}
-    const word = words[words.length - 2]
-    if(library[word] !== undefined){
-        //console.log('three running suggest')
-        const suggestions = library[word]
-        for(let w in suggestions){
-            if(suggestions[w] > 4){
-                for(let i = 0; i<suggestions[w];i++){
-                    choices.push(w)
-                }
-            }
-        }
-    }
-    //console.log(choices, 'three choices')
-    return choices
-}
+//  async function suggestThree(){
+//     const words = getWords(userInput)
+//     const choices = []
+//     if(words.length < 2){return}
+//     const word = words[words.length - 2]
+//     if(library[word] !== undefined){
+//         //console.log('three running suggest')
+//         const suggestions = library[word]
+//         for(let w in suggestions){
+//             if(suggestions[w] > 4){
+//                 for(let i = 0; i<suggestions[w];i++){
+//                     choices.push(w)
+//                 }
+//             }
+//         }
+//     }
+//     //console.log(choices, 'three choices')
+//     return choices
+// }
 
 $('#submit').click(function(){storeTwo()})
 $('#source-text').keyup(function(e){
-    console.log(e.keyCode)
     if(e.keyCode == 13){
         storeTwo()
         $('#user-input').focus()
@@ -111,7 +108,7 @@ async function sentenceAnalysis(choices){
     const sentences = getWords(userInput,false).join(' ').split('.')
     const sentence = sentences[sentences.length - 1]
 
-    console.log(sentence, sentence.length ? 'sentence' : 'new sentence')
+    // console.log(sentence, sentence.length ? 'sentence' : 'new sentence')
 
     
     // https://developer.oxforddictionaries.com/documentation
@@ -119,13 +116,23 @@ async function sentenceAnalysis(choices){
     // analyze content of sentence
 
     const req = {
-        // document: {object('this is a sample sentence')},
-
+        sentence: sentence
     }
 
     // determine if begining of sentence
 
+    const newSentence = !sentence.length
+    console.log(sentence, newSentence)
+
     // send sentence to API
+
+    $.ajax({
+        type:'POST',
+        url:'/api/dictionary',
+        data:req
+    }).done(data => {
+        // console.log(data)
+    })
 
     // tree for sentence structure
 
@@ -135,6 +142,7 @@ async function sentenceAnalysis(choices){
     // if there are multiple acceptable options choose most heavily weighted
 
     // return next word and period if is end of sentence 
+    return 0
 }
 
 let selection = ''
@@ -148,6 +156,7 @@ const suggestTwo = (e) => {
         // generate next suggestion
         e.keyCode = 0
         suggestTwo(e)
+        return
     }
 
     $('#submit').text('submit').css({'background-color':'white','color':'black','border':'1px solid black'})
