@@ -1,4 +1,4 @@
-
+const request = require('request')
 const {APPID, APPKEY} = require('./../config.json')
 console.log(APPID, APPKEY)
 
@@ -20,9 +20,11 @@ module.exports = (app,Word,Sentence) => {
             if(w){
                 console.log('word found', w)
             } else {
-                request(`https://od-api.oxforddictionaries.com/api/v1/english/${word}`, (err, response, body) => {
-                    console.log(err || body)
-                })
+                // request(`https://od-api.oxforddictionaries.com/api/v1/english/${word}`, (err, response, body) => {
+                //     console.log(err || body)
+                //     res.send(word, err || response)
+                // })
+                res.send(word)
             }
 
         })
