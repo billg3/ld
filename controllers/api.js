@@ -25,33 +25,6 @@ module.exports = (app,Word,Sentence) => {
                 })
             }
 
-
-async function addWord(word){
-    //word = 'hello'
-    // request(`https://od-api.oxforddictionaries.com/api/v1/entries/english/${word}?app_id`)
-    //    .then(d => console.log(d))
-
-    return await 'asdf'
-}
-
-module.exports = (app,Word) => {
-    app.route('/api/dictionary')
-        .post((req,res) => {
-            const sentence = req.body.sentence.split(' ')
-            sentence.forEach(e => {
-                Word.find({word:e}).then(data => {
-                    var grammarType
-                    console.log(data)
-                    // if word does not exist in db get it from api
-                    if(!data.length) addWord().then(d => { grammarType = d })
-                })
-            })
-            // Word.find()
-
-            console.log(sentence)
-            res.send('asdf')
         })
-        request(``)
-        res.send(req.body.word)
     })
 }
