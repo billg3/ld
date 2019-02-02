@@ -100,6 +100,11 @@ async function suggest(e) {
     return choices
 }
 
+window.getWord = word => {
+    $.post(`/api/word`, {word:word})
+        .done(d => {console.log(d); return d})
+        .catch(err => {console.log(err); return err})
+}
 
 async function sentenceAnalysis(choices){
     let calls = 0
