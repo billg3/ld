@@ -102,7 +102,7 @@ async function suggest(e) {
 
 window.getWord = word => {
     $.post(`/api/word`, {word:word})
-        .done(d => {console.log(d); return d})
+        .done(d => {console.log(d); window.word = d; return d})
         .catch(err => {console.log(err); return err})
 }
 

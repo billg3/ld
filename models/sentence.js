@@ -2,7 +2,7 @@
 const {Schema, model} = require('mongoose')
 
 const sentenceSchema = new Schema({
-    sentence: String
+    sentence: Number
 })
 
 const Sentence = model('Sentence', sentenceSchema)

@@ -1,4 +1,4 @@
-const request = require('request')
+const rp = require('request-promise')
 const {APPID, APPKEY} = require('./../config.json')
 console.log(APPID, APPKEY)
 
@@ -8,23 +8,44 @@ console.log(APPID, APPKEY)
 
 
 module.exports = (app,Word,Sentence) => {
-    // app.route('/api/word/:word') 
-    //     .post((req,res) => {
-    //         console.log(req.body)
-    //         res.send('asdf')
-    //     })
     app.post('/api/word', (req,res) => {
         const {word} = req.body
         Word.findOne({word:word}, (err,w ) => {
             console.log(w)
             if(w){
                 console.log('word found', w)
+                res.send('asdf')
             } else {
-                // request(`https://od-api.oxforddictionaries.com/api/v1/english/${word}`, (err, response, body) => {
-                //     console.log(err || body)
-                //     res.send(word, err || response)
-                // })
-                res.send(word)
+                console.log(word)
+                const options = {
+                    url: `https://od-api.oxforddictionaries.com/api/v1/entries/en/${word}`,
+                    headers: {
+                        app_id: APPID,
+                        app_key: APPKEY
+                    }
+                }
+                var grammar = 'undefined'
+                const cb = (error, response, body) => {
+                    
+                    if(!error){
+                        const b = JSON.parse(body)
+                        grammar = b.results[0].lexicalEntries[0].lexicalCategory
+                    }
+                    res.send(JSON.stringify(grammar))
+                }
+                rp(options)
+                    .then(d => {
+                        d = JSON.parse(d)
+                        // res.send(JSON.stringify(d))
+                        return d.results[0].lexicalEntries ? d.results[0].lexicalEntries[0].lexicalCategory : 'undefined'
+                    })
+                    .then(lexicalCategory => {
+                        console.log(lexicalCategory)
+                        res.send(lexicalCategory)
+                    })
+                    .catch(err => console.log(err))
+                // const entry = new Word({word:word, lexicalCategory: grammar})
+                // entry.save()
             }
 
         })
