@@ -10,13 +10,14 @@ console.log(APPID, APPKEY)
 module.exports = (app,Word,Sentence) => {
     app.post('/api/word', (req,res) => {
         const {word} = req.body
+        
         Word.findOne({word:word}, (err,w ) => {
-            console.log(w)
+            // console.log(w)
             if(w){
-                console.log('word found', w)
-                res.send('asdf')
+                // console.log('word found', w)
+                res.send(w.lexicalCategory)
             } else {
-                console.log(word)
+                // console.log(word)
                 const options = {
                     url: `https://od-api.oxforddictionaries.com/api/v1/entries/en/${word}`,
                     headers: {
@@ -33,21 +34,32 @@ module.exports = (app,Word,Sentence) => {
                     }
                     res.send(JSON.stringify(grammar))
                 }
-                rp(options)
-                    .then(d => {
-                        d = JSON.parse(d)
-                        // res.send(JSON.stringify(d))
-                        return d.results[0].lexicalEntries ? d.results[0].lexicalEntries[0].lexicalCategory : 'undefined'
-                    })
-                    .then(lexicalCategory => {
-                        console.log(lexicalCategory)
-                        res.send(lexicalCategory)
-                    })
-                    .catch(err => console.log(err))
-                // const entry = new Word({word:word, lexicalCategory: grammar})
-                // entry.save()
-            }
+                try{
+                    rp(options)
+                        .then(d => {
+                            d = JSON.parse(d)
+                            // res.send(JSON.stringify(d))
+                            return d.results[0].lexicalEntries ? d.results[0].lexicalEntries[0].lexicalCategory : 'undefined'
+                        }).catch(e => {console.log(e); res.send('undefined')})
+                        .then(lexicalCategory => {
+                            // console.log(lexicalCategory)
+                            res.send(lexicalCategory)
+                            const entry = new Word({word:word, lexicalCategory: lexicalCategory})
+                            entry.save()
+                        })
+                        .catch(err => console.log('SECOND', err))
+                    // const entry = new Word({word:word, lexicalCategory: grammar})
+                    // entry.save()
+                    } catch(e) {
+                        console.log(e)
+                        res.send('undefined')
+                    }
+            }   
 
         })
+    })
+    app.post('/api/sentence', (req,res) => {
+        console.log(req.body)
+        res.send('asdf')
     })
 }

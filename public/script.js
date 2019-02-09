@@ -41,6 +41,78 @@ const storeTwo = function(){
     $('#suggestion-container').css('display','block')
 }
 
+window.storeSentences = () => {
+    let calls = 0
+
+    // get sentence
+    const sentences = getWords(source,true).join(' ').split('.').filter(e => e.length)
+    console.log(sentences)
+    const sentence = sentences[sentences.length - 1]
+
+    // console.log(sentence, sentence.length ? 'sentence' : 'new sentence')
+
+    
+    // https://developer.oxforddictionaries.com/documentation
+    const url = 'https://od-api.oxforddictionaries.com/api/v1'
+    // analyze content of sentence
+
+
+    // determine if begining of sentence
+
+    const newSentence = !sentence.length
+    console.log(sentence, newSentence)
+
+    // send sentence to API
+
+    // choices = choices.split(' ')
+
+
+
+    const lexicalContent = (choices, i = 0, a = []) => {
+        if(!choices){ return }
+        if(i >= choices.length){ 
+            a.push('END'); 
+            console.log(a.join(' '), choices);
+            const sentence = {sentence:a.join(' ')}
+            $.ajax({
+                type:'POST',
+                url:'/api/sentence',
+                data:sentence
+            })
+            return
+        }
+        async function getWords(){
+            const w = {word:choices[i]}
+            d = await $.ajax({type:'POST',url:'/api/word',data:w})
+            return d
+        }
+        getWords().then(data => {
+            i++
+            a.push(data)
+            setTimeout(lexicalContent.bind(null, choices, i, a), 2000)
+        }).catch(err => console.log(err))
+
+    }
+
+    sentences.forEach(e => {
+        console.log(e)
+        lexicalContent(e.split(' '))
+    })
+
+    lexicalContent()
+
+
+    // tree for sentence structure
+
+    // determine next word type(s) based on sentence
+
+    // analyze choices to find best fit
+    // if there are multiple acceptable options choose most heavily weighted
+
+    // return next word and period if is end of sentence 
+    return 0
+}
+
 // const storeThree = function(){
 //     const words = getWords(source)
 //     words.forEach((e,i)=>{
@@ -106,49 +178,7 @@ window.getWord = word => {
         .catch(err => {console.log(err); return err})
 }
 
-async function sentenceAnalysis(choices){
-    let calls = 0
 
-    // get sentence
-    const sentences = getWords(userInput,false).join(' ').split('.')
-    const sentence = sentences[sentences.length - 1]
-
-    // console.log(sentence, sentence.length ? 'sentence' : 'new sentence')
-
-    
-    // https://developer.oxforddictionaries.com/documentation
-    const url = 'https://od-api.oxforddictionaries.com/api/v1'
-    // analyze content of sentence
-
-    const req = {
-        sentence: sentence
-    }
-
-    // determine if begining of sentence
-
-    const newSentence = !sentence.length
-    console.log(sentence, newSentence)
-
-    // send sentence to API
-
-    $.ajax({
-        type:'POST',
-        url:'/api/dictionary',
-        data:req
-    }).done(data => {
-        // console.log(data)
-    })
-
-    // tree for sentence structure
-
-    // determine next word type(s) based on sentence
-
-    // analyze choices to find best fit
-    // if there are multiple acceptable options choose most heavily weighted
-
-    // return next word and period if is end of sentence 
-    return 0
-}
 
 let selection = ''
 
@@ -185,20 +215,18 @@ const suggestTwo = (e) => {
     const key = e.keyCode
     suggest().then(d => {
         choices = choices.concat(d)
-        sentenceAnalysis().then(sentenceData => {
-            const index = Math.floor(Math.random() * choices.length)
-            const choice = choices[index]
-            selection = choice
+        const index = Math.floor(Math.random() * choices.length)
+        const choice = choices[index]
+        selection = choice
 
-            if(words[words.length - 1] == '.'){
-                selection = selection.split('')
-                selection[0] = selection[0].toUpperCase()
-                selection = selection.join('')
-            }
+        if(words[words.length - 1] == '.'){
+            selection = selection.split('')
+            selection[0] = selection[0].toUpperCase()
+            selection = selection.join('')
+        }
 
-            $('#suggestion').text(choice)
-            if(key !== 39){ return }
-        })
+        $('#suggestion').text(choice)
+        if(key !== 39){ return }
     })
 
 }
