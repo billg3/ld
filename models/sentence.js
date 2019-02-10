@@ -3,7 +3,10 @@ const {Schema, model} = require('mongoose')
 
 const sentenceSchema = new Schema({
     sentence: String,
-    count: Number
+    count: {
+        type: Number,
+        default: 0
+    }
 })
 
 const Sentence = model('Sentence', sentenceSchema)

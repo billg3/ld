@@ -12,54 +12,47 @@ module.exports = (app,Word,Sentence) => {
         const {word} = req.body
         
         Word.findOne({word:word}, (err,w ) => {
-            // console.log(w)
             if(w){
-                // console.log('word found', w)
-                res.send(w.lexicalCategory)
+                res.send(JSON.stringify({ lexicalCategory:w.lexicalCategory, api:false }))
             } else {
-                // console.log(word)
+                
+                // set up oxford dictionary api call
                 const options = {
-                    url: `https://od-api.oxforddictionaries.com/api/v1/entries/en/${word}`,
-                    headers: {
-                        app_id: APPID,
-                        app_key: APPKEY
-                    }
+                    url: `https://od-api.oxforddictionaries.com/api/v1/inflections/en/${word}`,
+                    headers: { app_id: APPID, app_key: APPKEY }
                 }
-                var grammar = 'undefined'
-                const cb = (error, response, body) => {
-                    
-                    if(!error){
-                        const b = JSON.parse(body)
-                        grammar = b.results[0].lexicalEntries[0].lexicalCategory
-                    }
-                    res.send(JSON.stringify(grammar))
-                }
-                try{
-                    rp(options)
-                        .then(d => {
-                            d = JSON.parse(d)
-                            // res.send(JSON.stringify(d))
-                            return d.results[0].lexicalEntries ? d.results[0].lexicalEntries[0].lexicalCategory : 'undefined'
-                        }).catch(e => {console.log(e); res.send('undefined')})
-                        .then(lexicalCategory => {
-                            // console.log(lexicalCategory)
-                            res.send(lexicalCategory)
-                            const entry = new Word({word:word, lexicalCategory: lexicalCategory})
-                            entry.save()
-                        })
-                        .catch(err => console.log('SECOND', err))
-                    // const entry = new Word({word:word, lexicalCategory: grammar})
-                    // entry.save()
-                    } catch(e) {
-                        console.log(e)
-                        res.send('undefined')
-                    }
+                rp(options)
+                    .then(d => {
+                        d = JSON.parse(d)
+                        const lexicalCategory = d.results[0].lexicalEntries ? d.results[0].lexicalEntries[0].lexicalCategory : 'undefined'
+                        // send lexical category and whether api was called 
+                        res.send(JSON.stringify({ lexicalCategory:lexicalCategory, api:true }))
+                        // save lexical category to db
+                        const entry = new Word({ word:word, lexicalCategory:lexicalCategory })
+                        entry.save()
+                    })
+                    .catch(err => {
+                        console.log('err', word)
+                        res.send(JSON.stringify({lexicalCategory:'undefined',api:true}))
+                    })
             }   
 
         })
     })
     app.post('/api/sentence', (req,res) => {
         console.log(req.body)
+        const {sentence} = req.body
         res.send('asdf')
+        Sentence.findOne({sentence:sentence}).exec((err, results) => {
+            console.log(results)
+            if(!results){
+                const s = new Sentence({sentence:sentence})
+                s.save()
+            } else {
+                Sentence.findOneAndUpdate({sentence:sentence},{$inc: {count:1}}).exec((err, results) => {
+                    console.log(err || results)
+                })
+            }
+        })
     })
 }

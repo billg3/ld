@@ -46,7 +46,6 @@ window.storeSentences = () => {
 
     // get sentence
     const sentences = getWords(source,true).join(' ').split('.').filter(e => e.length)
-    console.log(sentences)
     const sentence = sentences[sentences.length - 1]
 
     // console.log(sentence, sentence.length ? 'sentence' : 'new sentence')
@@ -60,7 +59,6 @@ window.storeSentences = () => {
     // determine if begining of sentence
 
     const newSentence = !sentence.length
-    console.log(sentence, newSentence)
 
     // send sentence to API
 
@@ -68,7 +66,7 @@ window.storeSentences = () => {
 
 
 
-    const lexicalContent = (choices, i = 0, a = []) => {
+    const lexicalContent = (choices, i, a = []) => {
         if(!choices){ return }
         if(i >= choices.length){ 
             a.push('END'); 
@@ -82,21 +80,24 @@ window.storeSentences = () => {
             return
         }
         async function getWords(){
-            const w = {word:choices[i]}
+            const word = choices[i]
+            const w = {word:word}
             d = await $.ajax({type:'POST',url:'/api/word',data:w})
-            return d
+            // console.log(d.lexicalCategory)
+            return JSON.parse(d)
         }
-        getWords().then(data => {
+        getWords().then((data) => {
             i++
-            a.push(data)
-            setTimeout(lexicalContent.bind(null, choices, i, a), 2000)
+            a.push(data.lexicalCategory)
+            if(!choices){return}
+            setTimeout(lexicalContent.bind(null, choices, i, a), data.api ? 2500 : 0)
         }).catch(err => console.log(err))
 
     }
 
     sentences.forEach(e => {
-        console.log(e)
-        lexicalContent(e.split(' '))
+        e = e.trim().split(' ').filter(e => e!== '')
+        lexicalContent(e, 0)
     })
 
     lexicalContent()
