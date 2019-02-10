@@ -6,10 +6,10 @@ const source = '#source-text'
 const userInput = '#user-input'
 
 const getWords = function(s, removeSentences = true){
-    const space = new RegExp(/\n/g)
+    const space = new RegExp(/\n|—|\s\s/g)
     const p = new RegExp(/\./g)
     const text = $(s).val().toLowerCase().replace(p,' .')
-    const regexp = removeSentences ? new RegExp(/\,|\:|\(|\)|\;|\'|\"|\↵/g) : new RegExp(/\,|\:|\(|\)|\;|\'|\"|\!|\?/g)
+    const regexp = removeSentences ? new RegExp(/,|\:|\(|\)|;|'|"|↵|\?|!|\[|\]/g) : new RegExp(/\,|\:|\(|\)|\;|\'|\"|\!|\?|—/g)
     return text.replace(space,' ').replace(regexp,'').split(' ').filter(e=>e!='')
 }
 
@@ -65,8 +65,9 @@ window.storeSentences = () => {
     // choices = choices.split(' ')
 
 
-
-    const lexicalContent = (choices, i, a = []) => {
+    let error = false;
+    async function lexicalContent(choices, i, a = []) {
+        if(error){ console.log('api error'); return }
         if(!choices){ return }
         if(i >= choices.length){ 
             a.push('END'); 
@@ -77,30 +78,43 @@ window.storeSentences = () => {
                 url:'/api/sentence',
                 data:sentence
             })
-            return
+            return true
         }
-        async function getWords(){
+        function getWords(){
             const word = choices[i]
             const w = {word:word}
-            d = await $.ajax({type:'POST',url:'/api/word',data:w})
+            let d = $.ajax({type:'POST',url:'/api/word',data:w, async:false})
             // console.log(d.lexicalCategory)
-            return JSON.parse(d)
-        }
-        getWords().then((data) => {
+            console.log(JSON.parse(d.responseText))
+            d = (JSON.parse(d.responseText))
+
             i++
-            a.push(data.lexicalCategory)
-            if(!choices){return}
-            setTimeout(lexicalContent.bind(null, choices, i, a), data.api ? 2500 : 0)
-        }).catch(err => console.log(err))
+            if(d.error){ if(d.errorMessage !== 'word not found'){ error = true }}
+            console.log(choices[i])
+            a.push(d.lexicalCategory)
+            if(choices[i]==undefined){return}
+            setTimeout(lexicalContent.bind(null, choices, i, a), d.api ? 3000 : 0)
+        }
+
+        getWords()
 
     }
 
-    sentences.forEach(e => {
-        e = e.trim().split(' ').filter(e => e!== '')
-        lexicalContent(e, 0)
-    })
+    let sentenceComplete = false
+    const allSentences = i => {
+        const choices = sentences[i].trim().split(' ').filter(e => e !== '')
+        lexicalContent(choices, 0).then(d => {i++, i<sentences.length && allSentences(i)})
+    }
 
-    lexicalContent()
+    allSentences(0)
+
+
+    // sentences.forEach(e => {
+    //     e = e.trim().split(' ').filter(e => e!== '')
+    //     lexicalContent(e, 0)
+    // })
+
+    // lexicalContent()
 
 
     // tree for sentence structure

@@ -13,7 +13,7 @@ module.exports = (app,Word,Sentence) => {
         
         Word.findOne({word:word}, (err,w ) => {
             if(w){
-                res.send(JSON.stringify({ lexicalCategory:w.lexicalCategory, api:false }))
+                res.send(JSON.stringify({ lexicalCategory:w.lexicalCategory, api:false, error:false }))
             } else {
                 
                 // set up oxford dictionary api call
@@ -24,16 +24,22 @@ module.exports = (app,Word,Sentence) => {
                 rp(options)
                     .then(d => {
                         d = JSON.parse(d)
-                        const lexicalCategory = d.results[0].lexicalEntries ? d.results[0].lexicalEntries[0].lexicalCategory : 'undefined'
+                        const lexicalCategory = d.results[0].lexicalEntries ? d.results[0].lexicalEntries[0].lexicalCategory : 'Proper Noun'
                         // send lexical category and whether api was called 
-                        res.send(JSON.stringify({ lexicalCategory:lexicalCategory, api:true }))
+                        res.send(JSON.stringify({ lexicalCategory:lexicalCategory, api:true, error:false }))
                         // save lexical category to db
                         const entry = new Word({ word:word, lexicalCategory:lexicalCategory })
                         entry.save()
                     })
                     .catch(err => {
-                        console.log('err', word)
-                        res.send(JSON.stringify({lexicalCategory:'undefined',api:true}))
+                        console.log('err', err, word)
+                        res.send(JSON.stringify({
+                            lexicalCategory: err.name == 'StatusCodeError' ? 'Proper Noun' : 'Undefined', 
+                            api:true, 
+                            error:true, 
+                            word:word, 
+                            errorMessage:'word not found'
+                        }))
                     })
             }   
 
