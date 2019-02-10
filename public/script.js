@@ -67,9 +67,14 @@ window.storeSentences = () => {
 
     let error = false;
     async function lexicalContent(choices, i, a = []) {
+        
+        // if there is an error do not call the api
         if(error){ console.log('api error'); return }
+        // if the sentence is empty do not call the api
         if(!choices){ return }
-        if(i >= choices.length){ 
+
+        if(i >= choices.length){
+            // add END to the end of the list of lexical categories and send to api
             a.push('END'); 
             console.log(a.join(' '), choices);
             const sentence = {sentence:a.join(' ')}
@@ -80,23 +85,21 @@ window.storeSentences = () => {
             })
             return true
         }
-        function getWords(){
-            const word = choices[i]
-            const w = {word:word}
-            let d = $.ajax({type:'POST',url:'/api/word',data:w, async:false})
-            // console.log(d.lexicalCategory)
-            console.log(JSON.parse(d.responseText))
-            d = (JSON.parse(d.responseText))
+        
+        const word = choices[i]
+        const w = {word:word}
+        let d = $.ajax({type:'POST',url:'/api/word',data:w, async:false})
 
-            i++
-            if(d.error){ if(d.errorMessage !== 'word not found'){ error = true }}
-            console.log(choices[i])
-            a.push(d.lexicalCategory)
-            if(choices[i]==undefined){return}
-            setTimeout(lexicalContent.bind(null, choices, i, a), d.api ? 3000 : 0)
-        }
+        d = (JSON.parse(d.responseText))
+        const {lexicalCategory, api, errorMessage} = d
 
-        getWords()
+        i++
+        if(d.error){ if(errorMessage !== 'word not found'){ error = true }}
+        a.push(lexicalCategory)
+        const time = api ? 3000 : 0
+        api && (console.log(time, d))
+        setTimeout(lexicalContent.bind(null, choices, i, a), time)
+        
 
     }
 

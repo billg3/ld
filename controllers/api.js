@@ -12,8 +12,10 @@ module.exports = (app,Word,Sentence) => {
         const {word} = req.body
         
         Word.findOne({word:word}, (err,w ) => {
+            console.log(w)
             if(w){
-                res.send(JSON.stringify({ lexicalCategory:w.lexicalCategory, api:false, error:false }))
+                if(word == 'if'){} 
+                res.send(JSON.stringify({ lexicalCategory:w.lexicalCategory, api:false, error:false, word:word }))
             } else {
                 
                 // set up oxford dictionary api call
@@ -26,20 +28,25 @@ module.exports = (app,Word,Sentence) => {
                         d = JSON.parse(d)
                         const lexicalCategory = d.results[0].lexicalEntries ? d.results[0].lexicalEntries[0].lexicalCategory : 'Proper Noun'
                         // send lexical category and whether api was called 
-                        res.send(JSON.stringify({ lexicalCategory:lexicalCategory, api:true, error:false }))
+                        res.send(JSON.stringify({ lexicalCategory:lexicalCategory, api:true, error:false, word:word }))
                         // save lexical category to db
                         const entry = new Word({ word:word, lexicalCategory:lexicalCategory })
                         entry.save()
                     })
                     .catch(err => {
                         console.log('err', err, word)
+                        const {statusCode} = err
                         res.send(JSON.stringify({
-                            lexicalCategory: err.name == 'StatusCodeError' ? 'Proper Noun' : 'Undefined', 
+                            lexicalCategory: statusCode == 403 ? 'err' : 'ProperNoun', 
                             api:true, 
                             error:true, 
                             word:word, 
-                            errorMessage:'word not found'
+                            errorMessage: statusCode == 403 ? 'api error' : 'word not found'
                         }))
+                        if(statusCode !== 403){
+                            const entry = new Word({ word:word, lexicalCategory:'ProperNoun' })
+                            entry.save()
+                        }
                     })
             }   
 
