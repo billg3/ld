@@ -76,14 +76,14 @@ window.storeSentences = () => {
         if(i >= choices.length){
             // add END to the end of the list of lexical categories and send to api
             a.push('END'); 
-            console.log(a.join(' '), choices);
+            // console.log(a.join(' '), choices);
             const sentence = {sentence:a.join(' ')}
             $.ajax({
                 type:'POST',
                 url:'/api/sentence',
                 data:sentence
             })
-            return true
+            return 'asdf'
         }
         
         const word = choices[i]
@@ -97,7 +97,7 @@ window.storeSentences = () => {
         if(d.error){ if(errorMessage !== 'word not found'){ error = true }}
         a.push(lexicalCategory)
         const time = api ? 3000 : 0
-        api && (console.log(time, d))
+        // api && (console.log(time, d))
         setTimeout(lexicalContent.bind(null, choices, i, a), time)
         
 
@@ -106,7 +106,7 @@ window.storeSentences = () => {
     let sentenceComplete = false
     const allSentences = i => {
         const choices = sentences[i].trim().split(' ').filter(e => e !== '')
-        lexicalContent(choices, 0).then(d => {i++, i<sentences.length && allSentences(i)})
+        lexicalContent(choices, 0).then(d => {console.log(d); i++, i<sentences.length && allSentences(i)})
     }
 
     allSentences(0)
@@ -198,6 +198,35 @@ window.getWord = word => {
 
 
 
+async function wordGrammar(words){
+    
+    let sentences = getWords(userInput, false).join(' ').split('.')
+    sentence = sentences[sentences.length - 1]
+    console.log(sentence, sentences)
+    if(sentence == ''){ return false }
+    const sentenceGrammar = []
+
+    sentence = sentence.split(' ')
+    sentence.forEach(e => {
+        console.log(e)
+        let wordGrammar = $.ajax({type:'POST', url:'/api/word', data:{word:e}, async:false}).responseText
+        wordGrammar = JSON.parse(wordGrammar).lexicalCategory
+        console.log(wordGrammar)
+        sentenceGrammar.push(wordGrammar)
+    })
+    
+    const choicesGrammar = {}
+    words = new Set(words)
+    console.log(words)
+    words.forEach(e => {
+        const r = $.ajax({type:'POST', url:'/api/word', data: {word:e}, async:false}).responseText
+        choicesGrammar[e] = JSON.parse(r).lexicalCategory
+    })
+
+    console.log(choicesGrammar)
+    return [choicesGrammar, sentenceGrammar.join(' '), sentence.length]
+}
+
 let selection = ''
 
 const suggestTwo = (e) => {
@@ -233,18 +262,45 @@ const suggestTwo = (e) => {
     const key = e.keyCode
     suggest().then(d => {
         choices = choices.concat(d)
-        const index = Math.floor(Math.random() * choices.length)
-        const choice = choices[index]
-        selection = choice
 
-        if(words[words.length - 1] == '.'){
-            selection = selection.split('')
-            selection[0] = selection[0].toUpperCase()
-            selection = selection.join('')
-        }
+        wordGrammar(choices).then(choicesGrammar => {
+            console.log(choicesGrammar)
+            const sentences = $.ajax({type:'POST', url: '/api/sentences/find', data:{sentence:choicesGrammar[0]}, async:false})
+            const sentencesGrammar = JSON.parse(sentences.responseText)[0].sentence
+            console.log(sentencesGrammar, choicesGrammar[2])
+            const nextWordGrammar = sentencesGrammar.split(' ')[choicesGrammar[2]]
+            if(nextWordGrammar !== 'END'){
+                grammarFilteredChoices = choices.filter(e => choicesGrammar[0][e] == nextWordGrammar)
+                choices = grammarFilteredChoices.length ? grammarFilteredChoices : choices
+                const index = Math.floor(Math.random() * choices.length)
+                choice = choices[index]
+            } else {
+                choice = '.'
+            }
+            selection = choice
 
-        $('#suggestion').text(choice)
-        if(key !== 39){ return }
+            if(words[words.length - 1] == '.'){
+                selection = selection.split('')
+                selection[0] = selection[0].toUpperCase()
+                selection = selection.join('')
+            }
+
+            $('#suggestion').text(choice)
+            if(key !== 39){ return }
+        })
+
+    //     const index = Math.floor(Math.random() * choices.length)
+    //     const choice = choices[index]
+    //     selection = choice
+
+    //     if(words[words.length - 1] == '.'){
+    //         selection = selection.split('')
+    //         selection[0] = selection[0].toUpperCase()
+    //         selection = selection.join('')
+    //     }
+
+    //     $('#suggestion').text(choice)
+    //     if(key !== 39){ return }
     })
 
 }

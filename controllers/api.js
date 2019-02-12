@@ -14,7 +14,8 @@ module.exports = (app,Word,Sentence) => {
         Word.findOne({word:word}, (err,w ) => {
             console.log(w)
             if(w){
-                if(word == 'if'){} 
+                if(word == 'if'){}
+                console.log(word, w.lexicalCategory)
                 res.send(JSON.stringify({ lexicalCategory:w.lexicalCategory, api:false, error:false, word:word }))
             } else {
                 
@@ -27,7 +28,9 @@ module.exports = (app,Word,Sentence) => {
                     .then(d => {
                         d = JSON.parse(d)
                         const lexicalCategory = d.results[0].lexicalEntries ? d.results[0].lexicalEntries[0].lexicalCategory : 'Proper Noun'
-                        // send lexical category and whether api was called 
+                        // send lexical category and whether api was called
+                        
+                        console.log(word, lexicalCategory)
                         res.send(JSON.stringify({ lexicalCategory:lexicalCategory, api:true, error:false, word:word }))
                         // save lexical category to db
                         const entry = new Word({ word:word, lexicalCategory:lexicalCategory })
@@ -55,6 +58,7 @@ module.exports = (app,Word,Sentence) => {
     app.post('/api/sentence', (req,res) => {
         console.log(req.body)
         const {sentence} = req.body
+        if(sentence.includes('err')){ return }
         res.send('asdf')
         Sentence.findOne({sentence:sentence}).exec((err, results) => {
             console.log(results)
@@ -66,6 +70,14 @@ module.exports = (app,Word,Sentence) => {
                     console.log(err || results)
                 })
             }
+        })
+    })
+    app.post('/api/sentences/find', (req,res) => {
+        const {sentence} = req.body
+        const regexp = new RegExp(`^${sentence}`)
+        Sentence.find({sentence:regexp}).exec((err, results) => {
+            if(results) res.send(JSON.stringify(results))
+            else res.send(JSON.stringify({err:true}))
         })
     })
 }
