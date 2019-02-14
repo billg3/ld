@@ -66,39 +66,47 @@ window.storeSentences = () => {
 
 
     let error = false;
-    async function lexicalContent(choices, i, a = []) {
+    function lexicalContent(choices) {
         
-        // if there is an error do not call the api
-        if(error){ console.log('api error'); return }
-        // if the sentence is empty do not call the api
-        if(!choices){ return }
+        return new Promise(function(resolve, reject){
+            let i = 0
+            const a = []
+            const sentencePromise = function(){
+                // if there is an error do not call the api
+                if(error){ console.log('api error'); return }
+                // if the sentence is empty do not call the api
+                if(!choices){ return }
 
-        if(i >= choices.length){
-            // add END to the end of the list of lexical categories and send to api
-            a.push('END'); 
-            // console.log(a.join(' '), choices);
-            const sentence = {sentence:a.join(' ')}
-            $.ajax({
-                type:'POST',
-                url:'/api/sentence',
-                data:sentence
-            })
-            return 'asdf'
-        }
-        
-        const word = choices[i]
-        const w = {word:word}
-        let d = $.ajax({type:'POST',url:'/api/word',data:w, async:false})
+                if(i >= choices.length){
+                    // add END to the end of the list of lexical categories and send to api
+                    a.push('END'); 
+                    // console.log(a.join(' '), choices);
+                    const sentence = {sentence:a.join(' ')}
+                    $.ajax({
+                        type:'POST',
+                        url:'/api/sentence',
+                        data:sentence
+                    })
+                    resolve(a)
+                    return
+                }
+                
+                const word = choices[i]
+                const w = {word:word}
+                let d = $.ajax({type:'POST',url:'/api/word',data:w, async:false})
 
-        d = (JSON.parse(d.responseText))
-        const {lexicalCategory, api, errorMessage} = d
+                d = (JSON.parse(d.responseText))
+                const {lexicalCategory, api, errorMessage} = d
 
-        i++
-        if(d.error){ if(errorMessage !== 'word not found'){ error = true }}
-        a.push(lexicalCategory)
-        const time = api ? 3000 : 0
-        // api && (console.log(time, d))
-        setTimeout(lexicalContent.bind(null, choices, i, a), time)
+                i++
+                if(d.error){ if(errorMessage !== 'word not found'){ error = true }}
+                a.push(lexicalCategory)
+                const time = api ? 3000 : 0
+                // api && (console.log(time, d))
+                setTimeout(sentencePromise, time)
+            }
+            sentencePromise()
+        })
         
 
     }
@@ -106,7 +114,7 @@ window.storeSentences = () => {
     let sentenceComplete = false
     const allSentences = i => {
         const choices = sentences[i].trim().split(' ').filter(e => e !== '')
-        lexicalContent(choices, 0).then(d => {console.log(d); i++, i<sentences.length && allSentences(i)})
+        lexicalContent(choices).then(d => {console.log(d); i++, i<sentences.length && allSentences(i)})
     }
 
     allSentences(0)
