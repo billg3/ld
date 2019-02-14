@@ -272,18 +272,35 @@ const suggestTwo = (e) => {
         choices = choices.concat(d)
 
         wordGrammar(choices).then(choicesGrammar => {
-            console.log(choicesGrammar)
-            const sentences = $.ajax({type:'POST', url: '/api/sentences/find', data:{sentence:choicesGrammar[0]}, async:false})
-            const sentencesGrammar = JSON.parse(sentences.responseText)[0].sentence
-            console.log(sentencesGrammar, choicesGrammar[2])
-            const nextWordGrammar = sentencesGrammar.split(' ')[choicesGrammar[2]]
-            if(nextWordGrammar !== 'END'){
-                grammarFilteredChoices = choices.filter(e => choicesGrammar[0][e] == nextWordGrammar)
-                choices = grammarFilteredChoices.length ? grammarFilteredChoices : choices
+            if(choicesGrammar){
+                console.log(choicesGrammar)
+                const sentences = $.ajax({type:'POST', url: '/api/sentences/find', data:{sentence:choicesGrammar[0]}, async:false})
+                // const sentencesGrammar = JSON.parse(sentences.responseText)[0].sentence
+                const sentencesGrammar = JSON.parse(sentences.responseText)
+                console.log(sentencesGrammar, choicesGrammar[2])
+                let endOfSentence;
+                if(sentencesGrammar.length == 1) {
+                    const nextWordGrammar = sentencesGrammar[0].sentence.split(' ')[choicesGrammar[2]]
+                    endOfSentence = nextWordGrammar == 'END' ? true : false
+                }
+
+                if(!endOfSentence){
+                    grammarFilteredChoices = choices.filter(e => {
+                        sentencesGrammar.forEach(j => {
+                            if(choicesGrammar[0][e] == j.sentence.split(' ')[choicesGrammar[2]]){ return true }
+                            else {return false}
+                        })
+                        // choicesGrammar[0][e] == nextWordGrammar
+                    })
+                    choices = grammarFilteredChoices.length ? grammarFilteredChoices : choices
+                    const index = Math.floor(Math.random() * choices.length)
+                    choice = choices[index]
+                } else {
+                    choice = '.'
+                }
+            } else {
                 const index = Math.floor(Math.random() * choices.length)
                 choice = choices[index]
-            } else {
-                choice = '.'
             }
             selection = choice
 
