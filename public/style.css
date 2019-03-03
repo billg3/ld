@@ -44,9 +44,22 @@ body {
     font-weight: bold
 }
 
-.instructions {
+.instructions, .word-options-container {
     padding: 1vw;
-    width: 40vw
+    width: 40vw;
+    display: inline-block;
+    vertical-align: top
+}
+
+.word-options-sentence {
+    font-size: 8px;
+    font-weight: bold;
+    margin: 4px
+}
+
+.gray-text {
+    color: gray;
+    font-weight: normal
 }
 
 .sample-links {

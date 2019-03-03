@@ -14,34 +14,7 @@ const getWords = function(s, removeSentences = true){
 }
 
 
-const store = function(){
-    const words = getWords(source)
-    words.forEach((e,i)=>{
-        if(library[e] == undefined) library[e] = {}
-        if(library[e][words[i+1]] == undefined) library[e][words[i+1]] = 0
-        library[e][words[i+1]] ++
-    })
-}
-
-const storeTwo = function(){
-    const words = getWords(source)
-    words.forEach((e,i)=>{
-        if(i < words.length - 3){
-            const two = `${e} ${words[i+1]}`
-            if(library[two] == undefined) library[two] = {}
-            if(library[two][words[i+2]] == undefined) library[two][words[i+2]] = 0
-            library[two][words[i+2]] ++
-        } 
-    })
-    store()
-    // storeThree()
-    document.getElementById('user-input').value = ''
-    $('#submit').text('ready').css({'background-color':'green','color':'white','padding':'2px 4px','border':'0px'})
-    $('#user-input').css('display','inline-block')
-    $('#suggestion-container').css('display','block')
-}
-
-window.storeSentences = () => {
+storeSentences = () => {
     let calls = 0
 
     // get sentence
@@ -114,7 +87,7 @@ window.storeSentences = () => {
     let sentenceComplete = false
     const allSentences = i => {
         const choices = sentences[i].trim().split(' ').filter(e => e !== '')
-        lexicalContent(choices).then(d => {console.log(d); i++, i<sentences.length && allSentences(i)})
+        lexicalContent(choices).then(d => { i++, i<sentences.length && allSentences(i)})
     }
 
     allSentences(0)
@@ -138,6 +111,35 @@ window.storeSentences = () => {
     // return next word and period if is end of sentence 
     return 0
 }
+
+const store = function(){
+    const words = getWords(source)
+    words.forEach((e,i)=>{
+        if(library[e] == undefined) library[e] = {}
+        if(library[e][words[i+1]] == undefined) library[e][words[i+1]] = 0
+        library[e][words[i+1]] ++
+    })
+}
+
+const storeTwo = function(){
+    const words = getWords(source)
+    words.forEach((e,i)=>{
+        if(i < words.length - 3){
+            const two = `${e} ${words[i+1]}`
+            if(library[two] == undefined) library[two] = {}
+            if(library[two][words[i+2]] == undefined) library[two][words[i+2]] = 0
+            library[two][words[i+2]] ++
+        } 
+    })
+    store()
+    // storeSentences()
+    // storeThree()
+    document.getElementById('user-input').value = ''
+    $('#submit').text('ready').css({'background-color':'green','color':'white','padding':'2px 4px','border':'0px'})
+    $('#user-input').css('display','inline-block')
+    $('#suggestion-container').css('display','block')
+}
+
 
 // const storeThree = function(){
 //     const words = getWords(source)
@@ -210,29 +212,29 @@ async function wordGrammar(words){
     
     let sentences = getWords(userInput, false).join(' ').split('.')
     sentence = sentences[sentences.length - 1]
-    console.log(sentence, sentences)
+    // console.log(sentence, sentences)
     if(sentence == ''){ return false }
     const sentenceGrammar = []
 
     sentence = sentence.split(' ')
     sentence.forEach(e => {
-        console.log(e)
+        // console.log(e)
         let wordGrammar = $.ajax({type:'POST', url:'/api/word', data:{word:e}, async:false}).responseText
         wordGrammar = JSON.parse(wordGrammar).lexicalCategory
-        console.log(wordGrammar)
+        // console.log(wordGrammar)
         sentenceGrammar.push(wordGrammar)
     })
     
     const choicesGrammar = {}
     words = new Set(words)
-    console.log(words)
+    // console.log(words)
     words.forEach(e => {
         const r = $.ajax({type:'POST', url:'/api/word', data: {word:e}, async:false}).responseText
         choicesGrammar[e] = JSON.parse(r).lexicalCategory
     })
 
-    console.log(choicesGrammar)
-    return [choicesGrammar, sentenceGrammar.join(' '), sentence.length]
+    // console.log(choicesGrammar)
+    return [choicesGrammar, sentenceGrammar.join(' '), sentence.length, sentence]
 }
 
 let selection = ''
@@ -273,35 +275,74 @@ const suggestTwo = (e) => {
 
         wordGrammar(choices).then(choicesGrammar => {
             if(choicesGrammar){
-                console.log(choicesGrammar)
-                const sentences = $.ajax({type:'POST', url: '/api/sentences/find', data:{sentence:choicesGrammar[0]}, async:false})
+                // console.log(choicesGrammar[1], choicesGrammar[3])
+                // console.log(choicesGrammar[1].split(' ').shift())
+                const inputSentenceGrammar = choicesGrammar[3][0] == '' ?
+                    choicesGrammar[1].split(' ').slice(1, choicesGrammar[1].split(' ').length).join(' ') :
+                    choicesGrammar[1]
+                // console.log(inputSentenceGrammar)
+                const sentences = $.ajax({type:'POST', url: '/api/sentences/find', data:{sentence:inputSentenceGrammar}, async:false})
                 // const sentencesGrammar = JSON.parse(sentences.responseText)[0].sentence
                 const sentencesGrammar = JSON.parse(sentences.responseText)
-                console.log(sentencesGrammar, choicesGrammar[2])
+                // console.log(sentencesGrammar)
+                // console.log(sentencesGrammar)
+                const wordOptionsSentencesContainer = $('.word-options-sentences-container')
+                // wordOptionsSentencesContainer.html('')
+                
+                // console.log(sentencesGrammar, choicesGrammar[2])
                 let endOfSentence;
                 if(sentencesGrammar.length == 1) {
-                    const nextWordGrammar = sentencesGrammar[0].sentence.split(' ')[choicesGrammar[2]]
+                    // console.log(sentencesGrammar)
+                    const nextWordGrammar = sentencesGrammar[0].sentence.split(' ')[inputSentenceGrammar.split(' ').length]
                     endOfSentence = nextWordGrammar == 'END' ? true : false
                 }
 
                 if(!endOfSentence){
+                    const keepSentences = []
                     grammarFilteredChoices = choices.filter(e => {
-                        sentencesGrammar.forEach(j => {
-                            if(choicesGrammar[0][e] == j.sentence.split(' ')[choicesGrammar[2]]){ return true }
-                            else {return false}
+                        let r = false
+                        sentencesGrammar.forEach((j,i) => {
+                            console.log(j)
+                            // console.log(e, choicesGrammar[0][e])
+                            // console.log(j.sentence.split(' '))
+                            if(choicesGrammar[0][e] == j.sentence.split(' ')[inputSentenceGrammar.split(' ').length]){
+                                keepSentences.push(i)
+                                r = true 
+                            }
+                            // else { return false }
                         })
+                        return r
                         // choicesGrammar[0][e] == nextWordGrammar
                     })
+                    console.log(grammarFilteredChoices)
+                    console.log(choicesGrammar)
                     choices = grammarFilteredChoices.length ? grammarFilteredChoices : choices
                     const index = Math.floor(Math.random() * choices.length)
                     choice = choices[index]
+                    // console.log(sentencesGrammar)
+                    wordOptionsSentencesContainer.html('')
+                    sentencesGrammar.filter((s,i) => keepSentences.includes(i)).forEach(sG => {
+                        sG = sG.sentence.split(' ')
+                        const s1 = sG.slice(0, choicesGrammar[2])
+                        const s2 = sG.slice(choicesGrammar[2], sG.length)
+                        wordOptionsSentencesContainer.append(`
+                            <div class='word-options-sentence'>
+                                <span>${s1.join(' ')} </span>
+                                <span class='gray-text'>${s2.join(' ')}</span>
+                            </div>
+                        `)
+                    })
                 } else {
                     choice = '.'
                 }
+                
             } else {
                 const index = Math.floor(Math.random() * choices.length)
                 choice = choices[index]
             }
+
+
+
             selection = choice
 
             if(words[words.length - 1] == '.'){
